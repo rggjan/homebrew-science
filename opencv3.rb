@@ -107,7 +107,8 @@ class Opencv3 < Formula
 
   def install
     ENV.cxx11 if build.cxx11?
-    dylib = OS.mac? ? "dylib" : "so"
+    dylib = "a"
+    dylib = OS.mac? ? "dylib" : "so" if build.without?("static")
     with_qt = build.with?("qt")
 
     args = std_cmake_args + %w[
@@ -137,13 +138,14 @@ class Opencv3 < Formula
     args << "-DBUILD_TIFF=" + neg_arg_switch("libtiff")
     args << "-DBUILD_PNG=" + neg_arg_switch("libpng")
 
-    if build.with?("jpg") && build.with?("jpeg-turbo")
-      odie "Options --with-jpg and --with-jpeg-turbo are mutually exclusive."
-    elsif build.without?("jpg") && build.without?("jpeg-turbo")
+    if build.with?("jpeg") && build.with?("jpeg-turbo")
+      odie "Options --with-jpeg and --with-jpeg-turbo are mutually exclusive."
+    elsif build.without?("jpeg") && build.without?("jpeg-turbo")
       args << "-DBUILD_JPEG=ON"
     else
       jpeg = Formula[build.with?("jpeg-turbo") ? "jpeg-turbo" : "jpeg"]
-      args << "-DBUILD_JPEG=ON#{jpeg.opt_include}"
+      args << "-DBUILD_JPEG=OFF"
+      args << "-DJPEG_INCLUDE_DIR=#{jpeg.opt_include}"
       args << "-DJPEG_LIBRARY=#{jpeg.opt_lib}/libjpeg.#{dylib}"
     end
 
